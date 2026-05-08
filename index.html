@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>搶先體驗 — AI 投資助理</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy: #002046;
+      --navy-light: #003370;
+      --accent: #1a5fa8;
+      --bg: #eef2f8;
+      --card: #ffffff;
+      --border: #002046;
+      --text-muted: #5a7a9e;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      background-color: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 48px 16px 64px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 36px;
+      opacity: 0;
+      transform: translateY(-16px);
+      animation: fadeUp 0.6s ease forwards;
+    }
+
+    .header h1 {
+      font-family: 'Noto Sans TC', sans-serif;
+      font-weight: 900;
+      font-size: 2.4rem;
+      color: var(--navy);
+      letter-spacing: 0.05em;
+    }
+
+    /* Intro text */
+    .intro {
+      font-size: 0.97rem;
+      line-height: 1.8;
+      color: var(--navy);
+      margin-bottom: 24px;
+      opacity: 0;
+      animation: fadeUp 0.6s ease 0.1s forwards;
+    }
+
+    /* Alert box */
+    .alert-box {
+      background: rgba(0, 32, 70, 0.05);
+      border-left: 3px solid var(--accent);
+      border-radius: 6px;
+      padding: 14px 16px;
+      font-size: 0.88rem;
+      color: #334e6e;
+      line-height: 1.75;
+      margin-bottom: 28px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      opacity: 0;
+      animation: fadeUp 0.6s ease 0.2s forwards;
+    }
+
+    .alert-box .bell-icon {
+      font-size: 1rem;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    /* Divider */
+    .divider {
+      border: none;
+      border-top: 1px solid #c8d6e8;
+      margin: 8px 0 28px;
+      opacity: 0;
+      animation: fadeUp 0.6s ease 0.3s forwards;
+    }
+
+    /* Section title */
+    .section-title {
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 20px;
+      opacity: 0;
+      animation: fadeUp 0.6s ease 0.35s forwards;
+    }
+
+    /* Task buttons */
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .task-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 20px 20px 24px;
+      text-decoration: none;
+      color: var(--navy);
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: background 0.18s ease, transform 0.15s ease, box-shadow 0.18s ease;
+      opacity: 0;
+      box-shadow: 0 1px 4px rgba(0,32,70,0.06);
+    }
+
+    .task-btn:nth-child(1) { animation: fadeUp 0.5s ease 0.42s forwards; }
+    .task-btn:nth-child(2) { animation: fadeUp 0.5s ease 0.52s forwards; }
+    .task-btn:nth-child(3) { animation: fadeUp 0.5s ease 0.62s forwards; }
+    .task-btn:nth-child(4) { animation: fadeUp 0.5s ease 0.72s forwards; }
+
+    .task-btn:hover {
+      background: #f0f5ff;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(0,32,70,0.12);
+    }
+
+    .task-btn:active {
+      transform: translateY(0px);
+      box-shadow: none;
+    }
+
+    .task-btn .label {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .task-btn .task-number {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      letter-spacing: 0.06em;
+      font-weight: 300;
+    }
+
+    .task-btn .chevron {
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>搶先體驗</h1>
+    </div>
+
+    <p class="intro">
+      感謝您願意參加 AI 助理的使用者體驗，請協助操作以下投資任務流程。
+    </p>
+
+    <div class="alert-box">
+      <span class="bell-icon">🔔</span>
+      <span>
+        小提醒，您操作的畫面為測試模板，畫面與正式環境相同，但僅有部分按鈕可以點擊，請您體驗投資流程過程中，依據使用者的角度給予回饋，讓我們有機會做得更好，謝謝。
+      </span>
+    </div>
+
+    <hr class="divider" />
+
+    <div class="section-title">開始體驗任務吧！</div>
+
+    <div class="task-list">
+      <a href="首頁.html" class="task-btn">
+        <div class="label">
+          <span class="task-number">任務一</span>
+          <span>搜尋功能</span>
+        </div>
+        <span class="chevron">
+          <i data-lucide="chevron-right" width="20" height="20"></i>
+        </span>
+      </a>
+
+      <a href="https://weitseng.github.io/ai-smart-assistant?key=AIzaSyC5HskvkfggnHnnqR87-GFfj9AvrDq23U8" class="task-btn" target="_blank" rel="noopener">
+        <div class="label">
+          <span class="task-number">任務二</span>
+          <span>個股分析（自選）</span>
+        </div>
+        <span class="chevron">
+          <i data-lucide="chevron-right" width="20" height="20"></i>
+        </span>
+      </a>
+
+      <a href="task3.html" class="task-btn">
+        <div class="label">
+          <span class="task-number">任務三</span>
+          <span>主動摘要（帳務）</span>
+        </div>
+        <span class="chevron">
+          <i data-lucide="chevron-right" width="20" height="20"></i>
+        </span>
+      </a>
+
+      <a href="task4.html" class="task-btn">
+        <div class="label">
+          <span class="task-number">任務四</span>
+          <span>銀行消費分析</span>
+        </div>
+        <span class="chevron">
+          <i data-lucide="chevron-right" width="20" height="20"></i>
+        </span>
+      </a>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+</html>
