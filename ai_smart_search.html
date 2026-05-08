@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智能搜尋</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 100%; height: 100%;
+  background: #f0f2f5;
+  display: flex; justify-content: center; align-items: flex-start;
+  font-family: -apple-system, 'PingFang TC', 'Helvetica Neue', sans-serif;
+}
+.shell {
+  width: 390px;
+  height: 100vh; max-height: 844px; min-height: 700px;
+  background: #fff;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+
+/* STATUS BAR */
+.sbar { display:flex; justify-content:space-between; align-items:center; padding:16px 24px 6px; flex-shrink:0; }
+.sbar-t { font-size:15px; font-weight:600; color:#0a1f44; }
+.sbar-i { display:flex; gap:6px; align-items:center; }
+
+/* TOP BAR */
+.tbar { display:flex; align-items:center; justify-content:center; padding:4px 20px 12px; position:relative; flex-shrink:0; }
+.tbar-title { font-size:17px; font-weight:600; color:#0a1f44; }
+.tbar-r { position:absolute; right:20px; display:flex; gap:12px; }
+.icon-btn {
+  width:32px; height:32px; border-radius:50%;
+  border:1.5px solid #c8d0de; background:#fff;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; transition:background .15s;
+}
+.icon-btn:hover { background:#f0f3f8; }
+
+/* WELCOME */
+#screenWelcome { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+.w-body { flex:1; padding:22px 28px 0; display:flex; flex-direction:column; }
+.w-sub  { font-size:14px; color:#9aa4b5; margin-bottom:5px; }
+.w-head { font-size:26px; font-weight:700; color:#0a1f44; line-height:1.25; letter-spacing:-.3px; margin-bottom:28px; }
+.cat-list { display:flex; flex-direction:column; gap:12px; }
+.cpill {
+  display:inline-flex; align-items:center; align-self:flex-start;
+  padding:12px 24px; border-radius:50px;
+  background:#e8edf6; border:none;
+  font-size:15px; font-weight:500; color:#0a1f44;
+  cursor:pointer; white-space:nowrap;
+  transition:background .15s, transform .1s;
+}
+.cpill:hover  { background:#d8e0f0; }
+.cpill:active { transform:scale(.97); }
+
+/* CHAT */
+#screenChat { flex:1; display:none; flex-direction:column; overflow:hidden; }
+
+.msgs {
+  flex:1; overflow-y:auto;
+  padding:16px 28px 0;
+  display:flex; flex-direction:column; gap:16px;
+}
+.msgs::-webkit-scrollbar { width:0; }
+
+/* Pinned tags */
+.pin-wrap { flex-shrink:0; padding:12px 28px 0; }
+.pin-row  { display:flex; gap:8px; overflow-x:auto; padding-bottom:2px; }
+.pin-row::-webkit-scrollbar { height:0; }
+.ptag {
+  flex-shrink:0; padding:7px 16px; border-radius:50px;
+  background:#e8edf6; border:none;
+  font-size:13px; font-weight:500; color:#0a1f44;
+  cursor:pointer; white-space:nowrap; transition:background .15s;
+}
+.ptag:hover { background:#d8e0f0; }
+
+/* INPUT BAR */
+.ibar { flex-shrink:0; display:flex; align-items:center; gap:10px; padding:10px 20px 24px; }
+.ipill {
+  flex:1; display:flex; align-items:center; gap:8px;
+  height:50px; border-radius:50px;
+  border:1.5px solid #dde1ea; background:#f7f8fb; padding:0 16px;
+}
+.ipill input {
+  flex:1; border:none; background:transparent;
+  font-size:14px; color:#0a1f44; outline:none; font-family:inherit;
+}
+.ipill input::placeholder { color:#b8c0cc; }
+.mic-icon { display:flex; align-items:center; cursor:pointer; flex-shrink:0; }
+.send-btn {
+  width:44px; height:44px; border-radius:50%;
+  background:#0a1f44; border:none; cursor:pointer; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  transition:opacity .15s;
+}
+.send-btn:hover { opacity:.82; }
+
+/* MESSAGES */
+.msg-user {
+  align-self:flex-end; max-width:76%;
+  padding:10px 16px; border-radius:20px 20px 4px 20px;
+  border:1.5px solid #c8d0de; background:#fff;
+  font-size:14px; color:#0a1f44; line-height:1.55;
+}
+.msg-ai-wrap { align-self:flex-start; max-width:96%; display:flex; flex-direction:column; }
+.msg-ai-body { font-size:14px; color:#0a1f44; line-height:1.75; white-space:pre-wrap; }
+
+/* Feature detail */
+.feat-detail {
+  margin-top:8px; padding:12px 14px;
+  background:#f5f7fb; border-radius:12px;
+  font-size:13.5px; color:#3a4a62; line-height:1.65;
+}
+.feat-detail-title { font-size:14px; font-weight:700; color:#0a1f44; margin-bottom:4px; }
+.feat-path { font-size:12px; color:#9aa4b5; margin-top:4px; }
+
+/* CTA */
+.cta-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+.btn-primary {
+  padding:9px 20px; border-radius:50px; background:#0a1f44; color:#fff;
+  border:none; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit;
+  transition:opacity .15s; white-space:nowrap;
+}
+.btn-primary:hover { opacity:.82; }
+.btn-secondary {
+  padding:9px 20px; border-radius:50px; background:#fff; color:#0a1f44;
+  border:1.5px solid #c8d0de; font-size:13px; font-weight:500;
+  cursor:pointer; font-family:inherit; transition:background .15s; white-space:nowrap;
+}
+.btn-secondary:hover { background:#f0f3f8; }
+
+/* Disambig */
+.disambig-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+.btn-disambig {
+  padding:9px 20px; border-radius:50px; background:#e8edf6; color:#0a1f44; border:none;
+  font-size:13px; font-weight:500; cursor:pointer; font-family:inherit;
+  transition:background .15s; white-space:nowrap;
+}
+.btn-disambig:hover { background:#d8e0f0; }
+
+/* ── FEEDBACK BAR ── */
+.feedback-bar {
+  display:flex; align-items:center; gap:5px; margin-top:10px;
+}
+.fb-btn {
+  display:flex; align-items:center; justify-content:center;
+  width:28px; height:28px; border-radius:50%;
+  border:1.5px solid #e2e6ef; background:#fff;
+  cursor:pointer; flex-shrink:0;
+  transition:background .15s, border-color .15s;
+  padding:0;
+}
+.fb-btn:hover:not(:disabled) { background:#f0f3f8; border-color:#c8d0de; }
+.fb-btn:disabled { cursor:default; }
+
+/* liked state */
+.fb-btn.liked { background:#eaf1ff; border-color:#0a1f44; }
+.fb-btn.liked .fb-icon-stroke { stroke:#0a1f44; }
+
+/* disliked state */
+.fb-btn.disliked { background:#fff4f4; border-color:#d94f4f; }
+.fb-btn.disliked .fb-icon-stroke { stroke:#d94f4f; }
+
+.fb-label {
+  font-size:11.5px; color:#b0b8c8;
+  margin-left:2px; user-select:none;
+  transition:color .2s;
+}
+.fb-label.fb-done { color:#5a6478; font-weight:500; }
+
+/* Typing */
+.typing-dots { display:flex; gap:5px; padding:2px 0; align-items:center; }
+.typing-dots span { width:7px; height:7px; background:#9aa4b5; border-radius:50%; animation:tdot 1.2s infinite; }
+.typing-dots span:nth-child(2) { animation-delay:.2s; }
+.typing-dots span:nth-child(3) { animation-delay:.4s; }
+@keyframes tdot { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-6px)} }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- Status bar -->
+  <div class="sbar">
+    <span class="sbar-t">9:41</span>
+    <div class="sbar-i">
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="none">
+        <rect x="0"    y="4"  width="3" height="8"  rx=".7" fill="#0a1f44"/>
+        <rect x="4.5"  y="2"  width="3" height="10" rx=".7" fill="#0a1f44"/>
+        <rect x="9"    y="0"  width="3" height="12" rx=".7" fill="#0a1f44"/>
+        <rect x="13.5" y="0"  width="3" height="12" rx=".7" fill="#c8d0de"/>
+      </svg>
+      <svg width="17" height="13" viewBox="0 0 17 13" fill="#0a1f44">
+        <path d="M8.5 3C5.6 3 3 4.3 1.2 6.3L0 5C2.3 2.4 5.2 1 8.5 1s6.2 1.4 8.5 4l-1.2 1.3C13.9 4.3 11.4 3 8.5 3zm0 3.2c-1.9 0-3.6.9-4.8 2.2L2.5 7.1C4 5.4 6.1 4.4 8.5 4.4s4.5 1 6 2.7l-1.2 1.3C12.1 7.1 10.4 6.2 8.5 6.2zm0 3.2c-1 0-1.9.4-2.6 1.1L8.5 13l2.6-2.5c-.7-.7-1.6-1.1-2.6-1.1z"/>
+      </svg>
+      <svg width="27" height="13" viewBox="0 0 27 13" fill="none">
+        <rect x=".5" y=".5" width="23" height="12" rx="3.5" stroke="#0a1f44" stroke-opacity=".3"/>
+        <rect x="2"  y="2"  width="19" height="9"  rx="2"   fill="#0a1f44"/>
+        <path d="M25 4v5a2.5 2.5 0 000-5z" fill="#0a1f44" fill-opacity=".35"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Top bar -->
+  <div class="tbar">
+    <span class="tbar-title">智能搜尋</span>
+    <div class="tbar-r">
+      <div class="icon-btn" title="歷史記錄">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="#0a1f44" stroke-width="1.6" stroke-linecap="round">
+          <circle cx="7.5" cy="7.5" r="6.5"/><polyline points="7.5,4.5 7.5,7.5 10,10"/>
+        </svg>
+      </div>
+      <div class="icon-btn" id="xBtn">
+        <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="#0a1f44" stroke-width="1.8" stroke-linecap="round">
+          <line x1="1" y1="1" x2="10" y2="10"/><line x1="10" y1="1" x2="1" y2="10"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- WELCOME -->
+  <div id="screenWelcome">
+    <div class="w-body">
+      <div class="w-sub">您好</div>
+      <div class="w-head">AI 助理將為您服務</div>
+      <div class="cat-list">
+        <button class="cpill" data-c="商品">查找商品</button>
+        <button class="cpill" data-c="功能">搜尋功能</button>
+        <button class="cpill" data-c="新聞">搜尋新聞動態</button>
+        <button class="cpill" data-c="到價通知">查看到價通知</button>
+      </div>
+    </div>
+    <div class="ibar">
+      <div class="ipill">
+        <input id="wInput" type="text" placeholder="輸入關鍵字或描述需求">
+        <span class="mic-icon">
+          <svg width="13" height="18" viewBox="0 0 13 18" fill="none">
+            <rect x="3.5" y=".5" width="6" height="10" rx="3" stroke="#b8c0cc" stroke-width="1.4"/>
+            <path d="M1 9a5.5 5.5 0 0011 0" stroke="#b8c0cc" stroke-width="1.4" stroke-linecap="round"/>
+            <line x1="6.5" y1="14.5" x2="6.5" y2="17" stroke="#b8c0cc" stroke-width="1.4" stroke-linecap="round"/>
+            <line x1="4"   y1="17"   x2="9"   y2="17" stroke="#b8c0cc" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+        </span>
+      </div>
+      <button class="send-btn" id="wSendBtn">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M4 10h12M12 6l4 4-4 4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- CHAT -->
+  <div id="screenChat">
+    <div class="msgs" id="msgList"></div>
+    <div class="pin-wrap">
+      <div class="pin-row">
+        <button class="ptag" data-c="商品">查找商品</button>
+        <button class="ptag" data-c="功能">搜尋功能</button>
+        <button class="ptag" data-c="新聞">搜尋新聞動態</button>
+        <button class="ptag" data-c="到價通知">查看到價通知</button>
+      </div>
+    </div>
+    <div class="ibar">
+      <div class="ipill">
+        <input id="cInput" type="text" placeholder="輸入關鍵字或描述需求">
+        <span class="mic-icon">
+          <svg width="13" height="18" viewBox="0 0 13 18" fill="none">
+            <rect x="3.5" y=".5" width="6" height="10" rx="3" stroke="#b8c0cc" stroke-width="1.4"/>
+            <path d="M1 9a5.5 5.5 0 0011 0" stroke="#b8c0cc" stroke-width="1.4" stroke-linecap="round"/>
+            <line x1="6.5" y1="14.5" x2="6.5" y2="17" stroke="#b8c0cc" stroke-width="1.4" stroke-linecap="round"/>
+            <line x1="4"   y1="17"   x2="9"   y2="17" stroke="#b8c0cc" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+        </span>
+      </div>
+      <button class="send-btn" id="cSendBtn">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M4 10h12M12 6l4 4-4 4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ── Data（來源：功能描述與關鍵字.xlsx）── */
+const FEATURES = {
+  "台股定期定額": {
+    title:"台股定期定額", category:"投資交易",
+    path:"投資 › 定期定額 › 台股",
+    desc:"透過長期分批投入分散風險，支援每月固定日期、金額自動買進台股或 ETF，適合小資穩定存股。",
+    keywords:["台股定期定額","存股","自動買","定期定額","0050","00878","扣款",
+              "台股","每月固定","分批","小資","etf","每個月","投入","固定金額","每個月投入","按月"]
+  },
+  "美股定期定額": {
+    title:"美股定期定額", category:"投資交易",
+    path:"投資 › 定期定額 › 美股",
+    desc:"以定額或定股方式自動投資美股龍頭與 ETF，免去手動換匯與盯盤煩惱，輕鬆參與全球市場。",
+    keywords:["美股定期定額","買美股","複委託","自動買","nvda","aapl","美金扣款",
+              "美股","美元","apple","nvidia","美股etf","海外","全球","每個月","按月"]
+  },
+  "下單": {
+    title:"下單", category:"投資交易",
+    path:"交易 › 下單",
+    desc:"提供即時市場報價，支援台股現股、融資券及盤後零股交易，直覺式介面助您快速搶佔投資先機。",
+    keywords:["下單","買股票","賣股票","現股","零股","委託","交易",
+              "融資","融券","買進","賣出","盤後","即時報價","搶進","每個月","按月"]
+  },
+  "智慧單": {
+    title:"智慧單", category:"監控自動化",
+    path:"交易 › 智慧單",
+    desc:"24小時全天候監控，預設觸發條件（如價格、漲跌幅）達成後系統自動送單，精準執行交易紀律。",
+    keywords:["智慧單","自動賣","條件單","停損","停利","觸價","監控","掛單",
+              "24小時","自動下單","漲跌幅","oco","全天候","自動送單","紀律"]
+  },
+  "到價通知": {
+    title:"到價通知", category:"監控自動化",
+    path:"自選股 › 到價通知",
+    desc:"個股達到設定目標價時，系統立即發送手機推播訊息，確保您第一時間掌握行情，彈性決定操作時機。",
+    keywords:["到價通知","提醒我","股價警示","通知","跌到","漲到","推播",
+              "目標價","提醒","警示","股價提醒","讓我知道","告訴我","提示","推播通知","股價變動"]
+  },
+  "不限用途款貸": {
+    title:"不限用途款貸", category:"資金融資",
+    path:"借貸 › 不限用途款貸",
+    desc:"免賣股票也能換現金！以庫存股票作為擔保品向券商借款，隨借隨還，資產配置更具流動性。",
+    keywords:["不限用途款貸","借錢","貸款","周轉","股票貸款","急用錢","質押",
+              "借款","擔保","庫存股票","不賣股","免賣股","現金","調度","不限用途"]
+  },
+  "密碼中心": {
+    title:"密碼中心", category:"安全帳務",
+    path:"設定 › 密碼中心",
+    desc:"統籌管理登入、交易及語音密碼，提供解鎖、修改與忘記密碼重新申辦服務，維護帳戶安全。",
+    keywords:["密碼中心","密碼","登入","鎖定","忘記密碼","變更","解鎖",
+              "登入密碼","下單密碼","語音密碼","修改密碼","重辦","帳戶安全"]
+  },
+  "憑證專區": {
+    title:"憑證專區", category:"安全帳務",
+    path:"設定 › 憑證專區",
+    desc:"管理電子交易身分證明，支援憑證申請、更新與備份，是您線上委託與簽署文件的核心機制。",
+    keywords:["憑證專區","憑證","電子簽章","下單憑證","ca","數位印鑑",
+              "數位憑證","申請","展延","更新","備份","電子憑證","身分"]
+  },
+};
+
+const DISAMBIG_GROUPS = [
+  {
+    // 投資意圖 → 四大交易功能（最廣泛，最優先判斷）
+    triggers:[
+      "投資","我想投資","想要投資","開始投資","如何投資","怎麼投資",
+      "買股","炒股","理財","賺錢","增值","錢滾錢","資產增長","進場"
+    ],
+    features:["台股定期定額","美股定期定額","下單","智慧單"],
+    reply:"您想開始投資，以下幾種功能都能幫助您進場，請問哪種方式比較符合您的需求？",
+    hints:{
+      "台股定期定額":"每月自動扣款買台股／ETF，分散風險，適合長期穩健存股",
+      "美股定期定額":"自動定期投入美股龍頭或 ETF，輕鬆參與全球市場",
+      "下單":"即時報價，手動選時機買進或賣出，靈活掌控每一筆交易",
+      "智慧單":"設定觸發條件後系統全天候自動送單，精準執行交易紀律"
+    }
+  },
+  {
+    // 每月投入 → 三方消歧義（優先判斷，放最前面）
+    triggers:[
+      "每個月","每月","每月投入","每月固定","定期投入","每個月投入",
+      "一筆錢","定期一筆","固定一筆","每月一筆","每月買","按月","每月放","每個月放"
+    ],
+    features:["台股定期定額","美股定期定額","下單"],
+    reply:"您想每月固定投入資金，有以下幾種方式可以選擇，請問哪個比較接近您的需求？",
+    hints:{
+      "台股定期定額":"自動扣款，系統幫你定期買台股／ETF，免手動操作",
+      "美股定期定額":"自動扣款，定期買美股或美股 ETF，支援股數或金額設定",
+      "下單":"每月自己選時機手動下單，靈活掌控買進時間點"
+    }
+  },
+  {
+    // 台股 vs 美股 定期定額
+    triggers:["定期定額","定期","固定投入","固定金額","存股","自動買"],
+    features:["台股定期定額","美股定期定額"],
+    reply:"我發現您對定期定額感興趣，目前提供台股與美股兩種選擇。請問您想了解哪一類？"
+  },
+  {
+    // 到價通知 vs 智慧單
+    triggers:["股價變動","讓我知道","告訴我","提示","通知我","監控","警示","提醒","自動"],
+    features:["到價通知","智慧單"],
+    reply:"這兩個功能都能符合您的需求：「到價通知」提供純警示提醒；「智慧單」則可設定條件自動下單。請問您需要哪一種？"
+  },
+  {
+    // 無法交易 → 憑證專區 + 密碼中心
+    triggers:[
+      "不能交易","無法交易","交易失敗","不能下單","無法下單","下單失敗",
+      "怎麼交易","沒辦法交易","不給交易","交易異常","交易問題",
+      "委託失敗","送單失敗","一直失敗","交易卡住","無法操作",
+      "沒辦法下單","下不了單","買不了","賣不了","不能買","不能賣",
+      "下單不了","一直下不去","點了沒反應","送不出去"
+    ],
+    features:["憑證專區","密碼中心"],
+    reply:"無法交易通常與憑證或密碼設定有關，以下兩個地方可以先確認看看：",
+    hints:{
+      "憑證專區":"確認電子憑證是否過期、未申請或條款未簽署，憑證失效會導致無法委託",
+      "密碼中心":"確認交易密碼是否鎖定、過期或需要重設，密碼異常也會阻擋下單"
+    }
+  },
+];
+
+const CAT_REPLY = {
+  "功能":    "我可以協助您快速找到所需功能。只需輸入關鍵字或描述您的需求，我將一步步引導您，精準定位對應的功能。",
+  "商品":    "請輸入商品名稱、股票代號或關鍵字，我將為您快速查詢。",
+  "新聞":    "請輸入關鍵字或主題，例如「台積電最新消息」「Fed 升降息」，我將彙整最新動態。",
+  "到價通知":"您目前的到價通知：\n・台積電 (2330)：目標價 $1,050\n・聯發科 (2454)：目標價 $1,200\n\n需要新增或修改通知嗎？",
+};
+const CAT_LABEL = {"商品":"查找商品","功能":"搜尋功能","新聞":"搜尋新聞動態","到價通知":"查看到價通知"};
+
+/* IDs that should NOT show a feedback bar */
+const NO_FEEDBACK_IDS = new Set(["cat-功能"]);
+
+let screen = "welcome", activeCat = null;
+const $ = id => document.getElementById(id);
+
+/* ── Feedback bar ──
+   showFeedback = true/false
+   Uses clean SVG icons: thumbs-up (hand) + ✕ circle for dislike
+*/
+function buildFeedbackBar() {
+  const bar = document.createElement("div");
+  bar.className = "feedback-bar";
+
+  /* Thumbs Up — classic hand icon */
+  const upBtn = document.createElement("button");
+  upBtn.className = "fb-btn";
+  upBtn.title = "有幫助";
+  upBtn.innerHTML = `
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+      <path class="fb-icon-stroke"
+        d="M14 9V5a3 3 0 00-3-3L7 14v7h11.3a2 2 0 002-1.7l1.4-8a2 2 0 00-2-2.3H14z
+           M7 14H4.7A2.3 2.3 0 002.4 16v3.7C2.4 21 3.4 22 4.7 22H7"
+        stroke="#9aa4b5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+
+  /* Thumbs Down — hand flipped vertically */
+  const downBtn = document.createElement("button");
+  downBtn.className = "fb-btn";
+  downBtn.title = "沒幫助";
+  downBtn.innerHTML = `
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+      <path class="fb-icon-stroke"
+        d="M10 15v4a3 3 0 003 3l4-9V2H5.7a2 2 0 00-2 1.7l-1.4 8a2 2 0 002 2.3H10z
+           M17 2h2.3A2.3 2.3 0 0121.6 4v3.7c0 1.3-1 2.3-2.3 2.3H17"
+        stroke="#9aa4b5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+
+  const label = document.createElement("span");
+  label.className = "fb-label";
+  label.textContent = "這則回覆有幫助嗎？";
+
+  function lock() { upBtn.disabled = true; downBtn.disabled = true; }
+
+  upBtn.addEventListener("click", () => {
+    upBtn.classList.add("liked");
+    upBtn.querySelector(".fb-icon-stroke").setAttribute("stroke", "#0a1f44");
+    label.textContent = "感謝您的反饋！";
+    label.classList.add("fb-done");
+    lock();
+  });
+
+  downBtn.addEventListener("click", () => {
+    downBtn.classList.add("disliked");
+    downBtn.querySelector(".fb-icon-stroke").setAttribute("stroke", "#d94f4f");
+    label.textContent = "感謝您的反饋，我們會持續優化。";
+    label.classList.add("fb-done");
+    lock();
+  });
+
+  bar.appendChild(upBtn);
+  bar.appendChild(downBtn);
+  bar.appendChild(label);
+  return bar;
+}
+
+/* ── DOM helpers ── */
+function scrollBot() {
+  const el = $("msgList");
+  if (el) setTimeout(() => { el.scrollTop = el.scrollHeight; }, 50);
+}
+
+function appendUser(text) {
+  const d = document.createElement("div"); d.className = "msg-user"; d.textContent = text;
+  $("msgList").appendChild(d); scrollBot();
+}
+
+/*
+  appendAI(text, extraEl, feedbackId)
+  feedbackId: pass a string to suppress feedback for that id (NO_FEEDBACK_IDS)
+              pass nothing / null to always show feedback
+*/
+function appendAI(text, extraEl, feedbackId) {
+  const wrap = document.createElement("div"); wrap.className = "msg-ai-wrap";
+  if (text) {
+    const body = document.createElement("div"); body.className = "msg-ai-body"; body.textContent = text;
+    wrap.appendChild(body);
+  }
+  if (extraEl) wrap.appendChild(extraEl);
+
+  /* Only add feedback bar if NOT in suppressed set */
+  const suppress = feedbackId && NO_FEEDBACK_IDS.has(feedbackId);
+  if (!suppress) wrap.appendChild(buildFeedbackBar());
+
+  $("msgList").appendChild(wrap); scrollBot();
+}
+
+function showTyping() {
+  const w = document.createElement("div"); w.className = "msg-ai-wrap"; w.id = "typing";
+  const d = document.createElement("div"); d.className = "typing-dots";
+  d.innerHTML = "<span></span><span></span><span></span>";
+  w.appendChild(d); $("msgList").appendChild(w); scrollBot();
+}
+function hideTyping() { const e = $("typing"); if (e) e.remove(); }
+
+/* ── Feature card ── */
+function buildFeatCard(key) {
+  const f = FEATURES[key], wrap = document.createElement("div");
+  const det = document.createElement("div"); det.className = "feat-detail";
+  if (f.category) {
+    const cat = document.createElement("div");
+    cat.style.cssText = "font-size:11px;font-weight:600;color:#6b7fa3;letter-spacing:.5px;text-transform:uppercase;margin-bottom:5px;";
+    cat.textContent = f.category;
+    det.appendChild(cat);
+  }
+  const dt  = document.createElement("div"); dt.className  = "feat-detail-title"; dt.textContent = f.title;
+  const dd  = document.createElement("div"); dd.textContent = f.desc;
+  const dp  = document.createElement("div"); dp.className  = "feat-path"; dp.textContent = "路徑：" + f.path;
+  det.appendChild(dt); det.appendChild(dd); det.appendChild(dp);
+  const row = document.createElement("div"); row.className = "cta-row";
+  const goBtn = document.createElement("button"); goBtn.className = "btn-primary"; goBtn.textContent = "前往使用";
+  goBtn.onclick = () => { appendUser("前往使用「"+f.title+"」"); setTimeout(() => appendAI("正在為您導航至「"+f.title+"」……"), 400); };
+  const favBtn = document.createElement("button"); favBtn.className = "btn-secondary"; favBtn.textContent = "設為常用功能";
+  favBtn.onclick = () => { favBtn.textContent="已設為常用 ✓"; favBtn.disabled=true; favBtn.style.opacity=".5"; setTimeout(() => appendAI("已將「"+f.title+"」設為常用功能！可以到「我的」快捷功能查看！"), 300); };
+  row.appendChild(goBtn); row.appendChild(favBtn);
+  wrap.appendChild(det); wrap.appendChild(row);
+  return wrap;
+}
+
+/* ── Disambig card ── */
+/* hints = optional object { featureKey: hintText }
+   With hints  → rich card stack (title + one-line description)
+   Without hints → simple pill row */
+function buildDisambigCard(keys, hints) {
+  if (hints) {
+    const stack = document.createElement("div");
+    stack.style.cssText = "display:flex;flex-direction:column;gap:8px;margin-top:10px;";
+    keys.forEach(key => {
+      const f = FEATURES[key]; if (!f) return;
+      const card = document.createElement("button");
+      card.style.cssText =
+        "display:flex;flex-direction:column;align-items:flex-start;" +
+        "padding:11px 14px;border-radius:14px;" +
+        "background:#f5f7fb;border:1.5px solid #e2e6ef;" +
+        "text-align:left;cursor:pointer;font-family:inherit;width:100%;" +
+        "transition:background .15s,border-color .15s;";
+      card.onmouseover = () => { card.style.background="#eef1f7"; card.style.borderColor="#c8d0de"; };
+      card.onmouseout  = () => { card.style.background="#f5f7fb"; card.style.borderColor="#e2e6ef"; };
+
+      const ttl = document.createElement("div");
+      ttl.style.cssText = "font-size:13.5px;font-weight:600;color:#0a1f44;margin-bottom:3px;";
+      ttl.textContent = f.title;
+      card.appendChild(ttl);
+
+      if (hints[key]) {
+        const ht = document.createElement("div");
+        ht.style.cssText = "font-size:12.5px;color:#5a6478;line-height:1.5;";
+        ht.textContent = hints[key];
+        card.appendChild(ht);
+      }
+
+      card.onclick = () => {
+        appendUser(f.title); showTyping();
+        setTimeout(() => { hideTyping(); appendAI("為您找到「"+f.title+"」的詳細說明：", buildFeatCard(key)); }, 750);
+      };
+      stack.appendChild(card);
+    });
+    return stack;
+  }
+
+  // Simple pill row
+  const row = document.createElement("div"); row.className = "disambig-row";
+  keys.forEach(key => {
+    const f = FEATURES[key]; if (!f) return;
+    const btn = document.createElement("button"); btn.className = "btn-disambig"; btn.textContent = f.title;
+    btn.onclick = () => {
+      appendUser(f.title); showTyping();
+      setTimeout(() => { hideTyping(); appendAI("為您找到「"+f.title+"」的詳細說明：", buildFeatCard(key)); }, 750);
+    };
+    row.appendChild(btn);
+  });
+  return row;
+}
+
+/* ── Intent engine ── */
+function norm(s) { return s.toLowerCase().replace(/\s/g,""); }
+function matchIntent(input) {
+  const q = norm(input);
+  for (const grp of DISAMBIG_GROUPS)
+    if (grp.triggers.some(t => q.includes(norm(t)))) return { type:"disambig", group:grp };
+  let bestKey = null, bestScore = 0;
+  for (const [key, f] of Object.entries(FEATURES)) {
+    let score = 0;
+    for (const kw of f.keywords) if (q.includes(norm(kw))) score += kw.length;
+    if (score > bestScore) { bestScore = score; bestKey = key; }
+  }
+  if (bestKey && bestScore > 0) return { type:"direct", key:bestKey };
+  return { type:"none" };
+}
+
+/* ── Process text ── */
+function processText(text) {
+  appendUser(text); showTyping();
+  setTimeout(() => {
+    hideTyping();
+    const r = matchIntent(text);
+    if (r.type === "direct") {
+      appendAI("為您找到「"+FEATURES[r.key].title+"」的詳細說明：", buildFeatCard(r.key));
+    } else if (r.type === "disambig") {
+      // Pass hints if the group defines them (rich cards), else simple pills
+      appendAI(r.group.reply, buildDisambigCard(r.group.features, r.group.hints || null));
+    } else {
+      appendAI("目前還沒找到對應功能！可以跟我多說一點你的使用情境嗎？我幫你更精準找看看！");
+    }
+  }, 900);
+}
+
+/* ── Screen transition ── */
+function goToChat(cat) {
+  if (screen === "chat") return;
+  screen = "chat"; activeCat = cat;
+  $("screenWelcome").style.display = "none";
+  $("screenChat").style.display    = "flex";
+  if (cat) {
+    appendUser(CAT_LABEL[cat] || cat); showTyping();
+    const feedbackId = cat === "功能" ? "cat-功能" : null;
+    setTimeout(() => { hideTyping(); appendAI(CAT_REPLY[cat] || "請輸入您的需求。", null, feedbackId); }, 700);
+  }
+}
+
+function tapTag(cat) {
+  activeCat = cat;
+  appendUser(CAT_LABEL[cat] || cat); showTyping();
+  const feedbackId = cat === "功能" ? "cat-功能" : null;
+  setTimeout(() => { hideTyping(); appendAI(CAT_REPLY[cat] || "請輸入您的需求。", null, feedbackId); }, 700);
+}
+
+/* ── Send ── */
+function handleSend(id) {
+  const el = $(id), text = el.value.trim(); if (!text) return; el.value = "";
+  if (screen === "welcome") { goToChat(null); setTimeout(() => processText(text), 300); }
+  else processText(text);
+}
+
+/* ── Bindings ── */
+document.querySelectorAll(".cpill").forEach(b => b.addEventListener("click", () => goToChat(b.dataset.c)));
+document.querySelectorAll(".ptag").forEach(t  => t.addEventListener("click", () => tapTag(t.dataset.c)));
+$("wSendBtn").addEventListener("click",  () => handleSend("wInput"));
+$("wInput").addEventListener("keydown",  e  => { if (e.key==="Enter") handleSend("wInput"); });
+$("cSendBtn").addEventListener("click",  () => handleSend("cInput"));
+$("cInput").addEventListener("keydown",  e  => { if (e.key==="Enter") handleSend("cInput"); });
+$("xBtn").addEventListener("click", () => {
+  window.location.href = "首頁.html";
+});
+</script>
+</body>
+</html>
